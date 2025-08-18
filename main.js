@@ -43,11 +43,18 @@ function createWindow() {
         title: 'HK Energy Dashboard'
     });
 
-    // Development modunda src klasöründen, production'da dist klasöründen yükle
+    // Ana HTML dosyasını yükle
+    console.log('NODE_ENV:', process.env.NODE_ENV);
     if (process.env.NODE_ENV === 'development') {
-        mainWindow.loadFile('src/index.html');
+        console.log('Development mode: Vite dev server\'a bağlanılıyor...');
+        // Vite dev server'ı kullan
+        mainWindow.loadURL('http://localhost:3000');
+        // Dev tools'u aç
+        mainWindow.webContents.openDevTools();
     } else {
-        mainWindow.loadFile('dist/index.html');
+        console.log('Production mode: Local dosya yükleniyor...');
+        // Production'da Vite build çıktısını kullan
+        mainWindow.loadFile(path.join(__dirname, 'dist', 'index.html'));
     }
 
     // Developer tools'u her zaman aç (hata ayıklama için)
@@ -66,6 +73,7 @@ function createWindow() {
 // Worker thread ile paralel arama - Inverter unique değerleri
 async function searchInvertersInTable(tableName) {
     return new Promise((resolve, reject) => {
+        // Worker thread'i daha etkin kullan
         const worker = new Worker(`
             const { parentPort } = require('worker_threads');
             const sql = require('mssql');
@@ -77,7 +85,18 @@ async function searchInvertersInTable(tableName) {
                 password: 'zeN&N-8QL*',
                 options: {
                     encrypt: false,
-                    trustServerCertificate: true
+                    trustServerCertificate: true,
+                    // Worker thread'de connection pooling'i optimize et
+                    pool: {
+                        max: 5,
+                        min: 1,
+                        acquireTimeoutMillis: 30000,
+                        createTimeoutMillis: 30000,
+                        destroyTimeoutMillis: 5000,
+                        idleTimeoutMillis: 30000,
+                        reapIntervalMillis: 1000,
+                        createRetryIntervalMillis: 200
+                    }
                 },
                 requestTimeout: 90000,
                 connectionTimeout: 90000
@@ -89,17 +108,17 @@ async function searchInvertersInTable(tableName) {
                 try {
                     const pool = await sql.connect(mssqlConfig);
                     
-                    // Sadece gerekli verileri al, parsing'i JavaScript'te yap
-                    const query = \`
-                        SELECT 
-                            NAME,
-                            WERT,
-                            DATUMZEIT,
-                            STATUS
-                        FROM \${tableName}
-                        WHERE NAME LIKE '%Inverter.%'
-                        ORDER BY DATUMZEIT DESC
-                    \`;
+                                                // DATUMZEIT'i ISO format string olarak al ki JavaScript 3 saat eklemesin
+                            const query = \`
+                                SELECT 
+                                    NAME,
+                                    WERT,
+                                    CONVERT(VARCHAR(50), DATUMZEIT, 120) AS DATUMZEIT,
+                                    STATUS
+                                FROM \${tableName}
+                                WHERE NAME LIKE '%Inverter.%'
+                                ORDER BY DATUMZEIT DESC
+                            \`;
                     
                     const result = await pool.request().query(query);
                     await pool.close();
@@ -222,12 +241,12 @@ async function searchRTUMeasPInTable(tableName) {
                 try {
                     const pool = await sql.connect(mssqlConfig);
                     
-                    // Sadece gerekli verileri al, parsing'i JavaScript'te yap
+                    // DATUMZEIT'i ISO format string olarak al ki JavaScript 3 saat eklemesin
                     const query = \`
                         SELECT 
                             NAME,
-                            WERT,
-                            DATUMZEIT,
+                            ABS(WERT) AS WERT,  -- Negatif değerleri pozitife çevir
+                            CONVERT(VARCHAR(50), DATUMZEIT, 120) AS DATUMZEIT,
                             STATUS
                         FROM \${tableName}
                         WHERE NAME LIKE '%RTU.%' AND NAME LIKE '%Meas.p%'
@@ -339,7 +358,7 @@ ipcMain.handle('search-inverters', async (event, { tables }) => {
     // Eğer zaten arama yapılıyorsa, yeni aramayı engelle
     if (isSearching) {
         console.log('⚠️ Zaten arama yapılıyor, yeni arama engellendi');
-        return;
+        return { success: false, error: 'Zaten arama yapılıyor' };
     }
     
     try {
@@ -347,39 +366,55 @@ ipcMain.handle('search-inverters', async (event, { tables }) => {
         const timestamp = new Date().toLocaleTimeString();
         console.log(`🔍 [${timestamp}] ${tables.length} tabloda veri arama başlatılıyor... (Inverter + RTU/Meas.p)`);
         
-        // Her tablo için hem Inverter hem RTU/Meas.p aramalarını aynı anda yap
-        const tablePromises = tables.map(async (tableName) => {
-            const [inverterRes, rtuRes] = await Promise.allSettled([
-                searchInvertersInTable(tableName),
-                searchRTUMeasPInTable(tableName)
-            ]);
+        // Worker thread'leri daha etkin kullan - batch processing
+        const batchSize = 3; // Aynı anda 3 tablo işle
+        const successfulResults = [];
+        const failedResults = [];
+        
+        for (let i = 0; i < tables.length; i += batchSize) {
+            const batch = tables.slice(i, i + batchSize);
+            
+            // Batch'i paralel işle
+            const batchPromises = batch.map(async (tableName) => {
+                const [inverterRes, rtuRes] = await Promise.allSettled([
+                    searchInvertersInTable(tableName),
+                    searchRTUMeasPInTable(tableName)
+                ]);
 
-            const inverterOk = inverterRes.status === 'fulfilled' && inverterRes.value.success;
-            const rtuOk = rtuRes.status === 'fulfilled' && rtuRes.value.success;
+                const inverterOk = inverterRes.status === 'fulfilled' && inverterRes.value.success;
+                const rtuOk = rtuRes.status === 'fulfilled' && rtuRes.value.success;
 
-            if (!inverterOk && !rtuOk) {
-                return { success: false, tableName, error: `Both queries failed` };
+                if (!inverterOk && !rtuOk) {
+                    return { success: false, tableName, error: `Both queries failed` };
+                }
+
+                return {
+                    success: true,
+                    tableName,
+                    inverterData: inverterOk ? inverterRes.value.data : {},
+                    totalInverters: inverterOk ? inverterRes.value.totalInverters : 0,
+                    rtuData: rtuOk ? rtuRes.value.data : {},
+                    totalRTUs: rtuOk ? rtuRes.value.totalRTUs : 0,
+                    totalMeasurements: (inverterOk ? inverterRes.value.totalMeasurements : 0) + (rtuOk ? rtuRes.value.totalMeasurements : 0)
+                };
+            });
+            
+            const batchResults = await Promise.all(batchPromises);
+            
+            // Batch sonuçlarını işle
+            batchResults.forEach(result => {
+                if (result.success) {
+                    successfulResults.push(result);
+                } else {
+                    failedResults.push(result);
+                }
+            });
+            
+            // Batch'ler arası kısa bekleme (worker thread'leri rahatlat)
+            if (i + batchSize < tables.length) {
+                await new Promise(resolve => setTimeout(resolve, 100));
             }
-
-            return {
-                success: true,
-                tableName,
-                inverterData: inverterOk ? inverterRes.value.data : {},
-                totalInverters: inverterOk ? inverterRes.value.totalInverters : 0,
-                rtuData: rtuOk ? rtuRes.value.data : {},
-                totalRTUs: rtuOk ? rtuRes.value.totalRTUs : 0,
-                totalMeasurements: (inverterOk ? inverterRes.value.totalMeasurements : 0) + (rtuOk ? rtuRes.value.totalMeasurements : 0)
-            };
-        });
-
-        const results = await Promise.allSettled(tablePromises);
-        const successfulResults = results
-            .filter(r => r.status === 'fulfilled' && r.value.success)
-            .map(r => r.value);
-
-        const failedResults = results
-            .filter(r => r.status === 'fulfilled' && !r.value.success)
-            .map(r => r.value);
+        }
 
         console.log(`✅ ${successfulResults.length} tabloda veri bulundu`);
         if (failedResults.length > 0) {

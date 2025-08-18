@@ -6,7 +6,7 @@ body {
     margin: 0;
     padding: 0;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+    background: linear-gradient(135deg, #fcfaf8 0%, #e2e8f0 100%);
     min-height: 100vh;
     overflow-x: hidden;
 }
@@ -31,27 +31,7 @@ body {
     backdrop-filter: blur(10px);
 }
 
-.header {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    padding: 20px 30px;
-    text-align: center;
-    flex-shrink: 0;
-}
 
-.header h1 {
-    margin: 0;
-    font-size: clamp(1.5rem, 4vw, 2.5rem);
-    font-weight: 300;
-    line-height: 1.2;
-}
-
-.header p {
-    margin: 8px 0 0 0;
-    opacity: 0.9;
-    font-size: clamp(0.9rem, 2.5vw, 1.1rem);
-    line-height: 1.4;
-}
 
 .content {
     padding: 8px;
@@ -107,12 +87,12 @@ body {
 .form-group select:focus,
 .form-group textarea:focus {
     outline: none;
-    border-color: #667eea;
+    border-color: #3b82f6;
 }
 
 .search-button {
     grid-column: 1 / -1;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
     color: white;
     border: none;
     padding: 15px 30px;
@@ -125,7 +105,7 @@ body {
 
 .search-button:hover {
     transform: translateY(-2px);
-    box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+    box-shadow: 0 10px 20px rgba(59, 130, 246, 0.3);
 }
 
 .search-button:disabled {
@@ -171,7 +151,7 @@ body {
 }
 
 .table-item.selected {
-    background: #667eea;
+    background: #3b82f6;
     color: white;
 }
 
@@ -251,12 +231,12 @@ body {
 }
 
 .tab.active {
-    color: #667eea;
-    border-bottom-color: #667eea;
+    color: #3b82f6;
+    border-bottom-color: #3b82f6;
 }
 
 .tab:hover {
-    color: #667eea;
+    color: #3b82f6;
 }
 
 .results-content {
@@ -308,7 +288,7 @@ body {
 }
 
 .result-table-count {
-    background: #667eea;
+    background: #3b82f6;
     color: white;
     padding: 4px 12px;
     border-radius: 15px;
@@ -349,12 +329,12 @@ body {
     justify-content: center;
     align-items: center;
     padding: 40px;
-    color: #667eea;
+    color: #3b82f6;
 }
 
 .spinner {
     border: 3px solid #f3f3f3;
-    border-top: 3px solid #667eea;
+    border-top: 3px solid #3b82f6;
     border-radius: 50%;
     width: 30px;
     height: 30px;
@@ -481,12 +461,12 @@ body {
     }
     
     .city-header {
-        padding: 12px 16px !important;
+        padding: 4px 8px !important;
         font-size: 14px !important;
     }
     
     .tesis-card {
-        padding: 16px !important;
+        padding: 8px !important;
         min-height: 300px !important;
     }
     
@@ -506,17 +486,451 @@ body {
     }
     
     .city-header {
-        padding: 10px 12px !important;
+        padding: 4px 8px !important;
         font-size: 13px !important;
     }
     
     .tesis-card {
-        padding: 12px !important;
+        padding: 8px !important;
         min-height: 250px !important;
     }
     
     .chart-container {
         height: 180px !important;
         padding: 8px !important;
+    }
+}
+
+/* Modern UI Components */
+.modern-button {
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    color: white;
+    border: 2px solid;
+    border-color: #3b82f6;
+    padding: 10px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.modern-button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.modern-button.secondary {
+    background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+    color: #475569;
+    border-color: #cbd5e1;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.modern-button.secondary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.modern-button.success {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    border-color: #10b981;
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.modern-button.success:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.city-header {
+    background: linear-gradient(135deg, #3b82f6 0%, #1e40af 100%);
+    color: white;
+    padding: 8px 12px;
+    font-weight: 600;
+    font-size: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.city-badge {
+    background: rgba(255,255,255,0.2);
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 600;
+    backdrop-filter: blur(10px);
+}
+
+.tesis-card {
+    border: 1px solid #e2e8f0;
+    padding: 8px;
+    background: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    min-height: 350px;
+}
+
+.tesis-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.12);
+}
+
+.tesis-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #f1f5f9;
+}
+
+.tesis-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+}
+
+.tesis-stats {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.stat-badge {
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 600;
+    color: white;
+}
+
+.stat-badge.success {
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.stat-badge.primary {
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+}
+
+.measurement-buttons {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.search-type-buttons {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+
+
+
+
+.results-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(600px, 1fr));
+    gap: 24px;
+    max-width: 100%;
+}
+
+.empty-state {
+    padding: 20px;
+    text-align: center;
+    color: #666;
+    background: #f8f9fa;
+    border-radius: 8px;
+    height: 300px;
+    display: flex;
+    alignItems: center;
+    justify-content: center;
+    border: 1px solid #e1e5e9;
+}
+
+.chart-container {
+    width: 100%;
+    height: 300px;
+    background: white;
+    border-radius: 8px;
+    border: 0px solid #e1e5e9;
+}
+
+.content-padding {
+    padding: 16px;
+}
+
+.city-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 16px;
+    overflow: hidden;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    background: white;
+    transition: all 0.3s ease;
+}
+
+.city-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.city-title .icon {
+    font-size: 18px;
+}
+
+.city-title .name {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.city-title-icon {
+    font-size: 18px;
+}
+
+.city-title-name {
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.rtu-city-card {
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    padding: 20px;
+    background: white;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+    min-height: 350px;
+    grid-column: 1 / -1;
+}
+
+.rtu-city-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #f1f5f9;
+}
+
+.rtu-city-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.rtu-indicator {
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.rtu-city-name {
+    font-weight: 700;
+    color: #1e293b;
+    font-size: 16px;
+}
+
+.rtu-city-stats {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+
+
+.tesis-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.tesis-name {
+    font-weight: 700;
+    color: #1e293b;
+    font-size: 16px;
+    padding-left: 12px;
+}
+
+.tesis-chart-container {
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border: 0px solid #e2e8f0;
+    height: 300px;
+}
+
+/* RTU Limit Değerleri ve Durum Göstergeleri */
+.rtu-limits-section {
+    margin-top: 16px;
+    padding: 16px;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border-radius: 10px;
+    border: 1px solid #e2e8f0;
+}
+
+.limits-title {
+    margin: 0 0 12px 0;
+    color: #1e293b;
+    font-size: 15px;
+    font-weight: 600;
+    text-align: center;
+}
+
+.limits-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 12px;
+}
+
+.limit-item {
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 12px;
+    transition: all 0.3s ease;
+}
+
+.limit-item.limit-ok {
+    border-color: #10b981;
+    background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 100%);
+}
+
+.limit-item.limit-exceeded {
+    border-color: #ef4444;
+    background: linear-gradient(135deg, #fef2f2 0%, #fecaca 100%);
+}
+
+.limit-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.facility-name {
+    font-weight: 600;
+    color: #1e293b;
+    font-size: 13px;
+}
+
+.limit-value {
+    background: #3b82f6;
+    color: white;
+    padding: 3px 6px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+.rtu-status {
+    margin-bottom: 6px;
+}
+
+.value-time-container {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.current-value {
+    font-weight: 600;
+    font-size: 12px;
+}
+
+.value-time {
+    font-size: 10px;
+    color: #6b7280;
+    font-weight: 500;
+}
+
+.current-value.normal {
+    color: #10b981;
+}
+
+.current-value.exceeded {
+    color: #ef4444;
+    background: #fef2f2;
+    padding: 3px 6px;
+    border-radius: 3px;
+    border: 1px solid #fecaca;
+}
+
+.no-data {
+    color: #6b7280;
+    font-style: italic;
+    font-size: 12px;
+}
+
+.violations {
+    margin-top: 6px;
+    padding-top: 6px;
+    border-top: 1px solid #fecaca;
+}
+
+.violation-item {
+    background: #fef2f2;
+    color: #dc2626;
+    padding: 4px 8px;
+    border-radius: 3px;
+    margin-bottom: 3px;
+    font-size: 11px;
+    font-weight: 500;
+    border: 1px solid #fecaca;
+}
+
+/* Responsive tasarım için limit grid düzenlemeleri */
+@media (max-width: 768px) {
+    .limits-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+    
+    .limit-item {
+        padding: 10px;
+    }
+    
+    .limit-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+    
+    .rtu-limits-section {
+        padding: 12px;
+        margin-top: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .limits-grid {
+        gap: 8px;
+    }
+    
+    .limit-item {
+        padding: 8px;
+    }
+    
+    .rtu-limits-section {
+        padding: 10px;
+        margin-top: 10px;
+    }
+    
+    .limits-title {
+        font-size: 14px;
+        margin-bottom: 10px;
     }
 } 
