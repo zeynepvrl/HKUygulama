@@ -142,11 +142,7 @@ function TesisChartComponent({ tesisData, tesisName, selectedMeasurementType }) 
                     centerY: am5.p100,
                     y: am5.p100,
                     layout: root.horizontalLayout,
-                    // Legend taşmasını önle
-                    paddingTop: 0,
-                    paddingBottom: 0,
-                    paddingLeft: 0,
-                    paddingRight: 0,
+
                     // Legend'ı chart container içinde tut
                     container: chart.plotContainer,
                     // Responsive ayarlar
@@ -156,13 +152,6 @@ function TesisChartComponent({ tesisData, tesisName, selectedMeasurementType }) 
                 })
             );
 
-            // Legend stilini kompakt yap
-
-            legend.itemContainers.template.set("paddingTop", 0);
-            legend.itemContainers.template.set("paddingBottom", 0);
-            legend.itemContainers.template.set("paddingLeft", 0);
-            legend.itemContainers.template.set("paddingRight", 0);
-
             // 1) Legend verisini bağla (şart)
             legend.data.setAll(chart.series.values);
 
@@ -171,13 +160,18 @@ function TesisChartComponent({ tesisData, tesisName, selectedMeasurementType }) 
                 width: am5.percent(100),
             });
 
-            // 3) Etiketleri kompakt tut (taşmayı azaltır)
-            legend.labels.template.setAll({
-                fontSize: 10,
-                maxWidth: 150,
-                oversizedBehavior: "truncate",
-                ellipsis: "…",
-                tooltipText: "{name}"
+         
+            // Legend marker'larını daha belirgin yap (varsayılan dikdörtgen marker kullan)
+            legend.set("useDefaultMarker", true);
+            legend.markers.template.setAll({ width: 16, height: 12, marginRight: 6 });
+            legend.markerRectangles.template.setAll({
+                width: 16,
+                height: 12,
+                strokeOpacity: 1,
+                strokeWidth: 1,
+                stroke: am5.color(0x334155),
+                cornerRadius: 3,
+                
             });
 
             // 4) Responsive: küçük ekranda da 6 sütun, sadece yazı küçülsün

@@ -1,5 +1,5 @@
 // ES6 modül formatında
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import TesisChartComponent from './TesisChartComponent.jsx';
 
 function App() {
@@ -9,6 +9,9 @@ function App() {
     const [lastUpdate, setLastUpdate] = useState(null);
     const [selectedMeasurementType, setSelectedMeasurementType] = useState('Active_Power');
     const [searchType, setSearchType] = useState('inverters');
+    const [updateStatus, setUpdateStatus] = useState(null);
+    const alarmStateRef = useRef({ lastAlarmMs: 0, latestAnyViolation: false });
+    const audioCtxRef = useRef(null);
 
     const targetGES = {
         'Kırşehir': ['Espeges2', 'Ferges5', 'Somges5', 'Verdeges5'], 
@@ -17,10 +20,104 @@ function App() {
         'Konya - Kulu': ['Fer1', 'Fer2', 'Verde', 'Som','Efor1', 'Efor2']
     };
 
+    // Sesli alarm
+    const playAlarm = async () => {
+        try {
+            const now = Date.now();
+            // 20 saniyeden sık çalma
+            if (now - alarmStateRef.current.lastAlarmMs < 10000) return;
+            alarmStateRef.current.lastAlarmMs = now;
+
+            let ctx = audioCtxRef.current;
+            const AudioCtx = window.AudioContext || window.webkitAudioContext;
+            if (!ctx && AudioCtx) {
+                ctx = new AudioCtx();
+                audioCtxRef.current = ctx;
+            }
+            if (!ctx) return;
+            if (ctx.state === 'suspended') {
+                try { await ctx.resume(); } catch (e) {
+                    console.warn('AudioContext resume blocked:', e);
+                    return; // kullanıcı etkileşimi gelince tekrar deneyeceğiz
+                }
+            }
+            const duration = 0.35; // sn
+            const gap = 0.15; // sn
+            const start = ctx.currentTime + 0.05;
+            const freqs = [1200, 800, 1200];
+            freqs.forEach((f, i) => {
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.type = 'square';
+                osc.frequency.value = f;
+                gain.gain.setValueAtTime(0.0001, start + i * (duration + gap));
+                gain.gain.exponentialRampToValueAtTime(0.5, start + i * (duration + gap) + 0.02);
+                gain.gain.exponentialRampToValueAtTime(0.0001, start + i * (duration + gap) + duration);
+                osc.connect(gain).connect(ctx.destination);
+                osc.start(start + i * (duration + gap));
+                osc.stop(start + i * (duration + gap) + duration + 0.02);
+            });
+            console.log('🔊 Alarm çalındı');
+        } catch (_) {
+            // sessizce yut
+        }
+    };
+
+    // AudioContext'i kullanıcı etkileşimiyle açmayı dene (tarayıcı/electron politikaları)
+    useEffect(() => {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (!AudioCtx) return;
+        if (!audioCtxRef.current) audioCtxRef.current = new AudioCtx();
+        const unlock = async () => {
+            try {
+                if (audioCtxRef.current && audioCtxRef.current.state === 'suspended') {
+                    await audioCtxRef.current.resume();
+                    // İhlal varsa hemen çal
+                    if (alarmStateRef.current.latestAnyViolation) {
+                        playAlarm();
+                    }
+                }
+            } catch (_) { /* noop */ }
+        };
+        window.addEventListener('click', unlock);
+        window.addEventListener('keydown', unlock);
+        return () => {
+            window.removeEventListener('click', unlock);
+            window.removeEventListener('keydown', unlock);
+        };
+    }, []);
+
+    // Limit aşımlarında alarm kontrolü
+    useEffect(() => {
+        if (!results || results.length === 0) return;
+        // RTU verisi olan her sonuçta ihlal var mı bak
+        let anyViolation = false;
+        results.forEach((r) => {
+            if (r && r.rtuData) {
+                const violations = checkRTULimits(r.rtuData, r.tableName);
+                if (violations.length > 0) anyViolation = true;
+            }
+        });
+        alarmStateRef.current.latestAnyViolation = anyViolation;
+        if (anyViolation) {
+            playAlarm();
+        }
+    }, [results]);
+
+    // Güncelleme durumu dinleyicisi
+    useEffect(() => {
+        if (window.electronAPI && window.electronAPI.onUpdateStatus) {
+            window.electronAPI.onUpdateStatus((data) => {
+                console.log('🔄 Güncelleme durumu:', data);
+                setUpdateStatus(data);
+            });
+        }
+    }, []);
+
     // Tesis limit değerleri
     const facilityLimits = {
         // Kırşehir - hepsi 999.6
-        'Espeges2': 999.6,
+        'Espeges2': 200.6,
         'Ferges5': 999.6,
         'Somges5': 999.6,
         'Verdeges5': 999.6,
@@ -45,7 +142,6 @@ function App() {
     useEffect(() => {
 
         handleSearch();
-        
         // Periyodik çalışma
         const interval = setInterval(() => {
             console.log('⏰ Periyodik veri güncelleme başlatılıyor');
@@ -60,21 +156,8 @@ function App() {
 
         const handleSearch = async () => {
         setIsLoading(true);
-
         try {
             const allTables = Object.values(targetGES).flat();
-            
-            // Electron API'nin mevcut olup olmadığını kontrol et
-            if (!window.electronAPI) {
-                console.error('❌ window.electronAPI tanımlı değil!');
-                throw new Error('Electron API bulunamadı');
-            }
-            
-            if (!window.electronAPI.searchInverters) {
-                console.error('❌ searchInverters fonksiyonu bulunamadı!');
-                throw new Error('searchInverters fonksiyonu bulunamadı');
-            }
-            
             const response = await window.electronAPI.searchInverters({
                 tables: allTables
             });
@@ -462,6 +545,41 @@ function App() {
     return React.createElement('div', { className: 'app' },
         React.createElement('div', { className: 'container' },
             React.createElement('div', { className: 'content' },
+
+                // Güncelleme bildirimi
+                updateStatus && React.createElement('div', { 
+                    className: `update-notification ${updateStatus.status}` 
+                },
+                    React.createElement('div', { className: 'update-content' },
+                        React.createElement('span', { className: 'update-icon' }, 
+                            updateStatus.status === 'available' ? '🔄' : 
+                            updateStatus.status === 'downloading' ? '📥' : 
+                            updateStatus.status === 'downloaded' ? '✅' : 
+                            updateStatus.status === 'error' ? '❌' : 'ℹ️'
+                        ),
+                        React.createElement('span', { className: 'update-message' }, updateStatus.message),
+                        updateStatus.status === 'available' && React.createElement('button', {
+                            className: 'update-button',
+                            onClick: async () => {
+                                try {
+                                    await window.electronAPI.downloadUpdate();
+                                } catch (error) {
+                                    console.error('Güncelleme indirme hatası:', error);
+                                }
+                            }
+                        }, 'İndir'),
+                        updateStatus.status === 'downloaded' && React.createElement('button', {
+                            className: 'update-button install',
+                            onClick: async () => {
+                                try {
+                                    await window.electronAPI.installUpdate();
+                                } catch (error) {
+                                    console.error('Güncelleme kurulum hatası:', error);
+                                }
+                            }
+                        }, 'Şimdi Kur')
+                    )
+                ),
 
                 (results.length > 0 || errors.length > 0) && 
                     React.createElement('div', { className: 'results-section' },

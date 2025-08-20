@@ -933,4 +933,85 @@ body {
         font-size: 14px;
         margin-bottom: 10px;
     }
+}
+
+/* Güncelleme bildirimi stilleri */
+.update-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    padding: 16px;
+    min-width: 300px;
+    z-index: 1000;
+    border-left: 4px solid #007bff;
+    animation: slideInRight 0.3s ease-out;
+}
+
+.update-notification.available {
+    border-left-color: #28a745;
+}
+
+.update-notification.downloading {
+    border-left-color: #ffc107;
+}
+
+.update-notification.downloaded {
+    border-left-color: #28a745;
+}
+
+.update-notification.error {
+    border-left-color: #dc3545;
+}
+
+.update-content {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.update-icon {
+    font-size: 20px;
+}
+
+.update-message {
+    flex: 1;
+    font-size: 14px;
+    color: #333;
+}
+
+.update-button {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    transition: background 0.2s;
+}
+
+.update-button:hover {
+    background: #0056b3;
+}
+
+.update-button.install {
+    background: #28a745;
+}
+
+.update-button.install:hover {
+    background: #1e7e34;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
 } 
